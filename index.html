@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vittiya Jagrukta Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --card: #1a2235;
+    --accent: #f59e0b;
+    --accent2: #10b981;
+    --danger: #ef4444;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --border: rgba(255,255,255,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245,158,11,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,158,11,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    font-family: 'Syne', sans-serif;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24, #f1f5f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    margin-top: 10px;
+    font-size: 15px;
+  }
+
+  /* Phase indicator */
+  .phase-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .phase-dot {
+    width: 28px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+    cursor: default;
+  }
+
+  .phase-dot.active { background: var(--accent); box-shadow: 0 0 10px rgba(245,158,11,0.5); }
+  .phase-dot.done { background: var(--accent2); }
+
+  /* Phase title */
+  .phase-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    background: var(--card);
+    border-radius: 10px;
+    height: 6px;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Question Card */
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    margin-bottom: 24px;
+    animation: slideUp 0.4s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .q-card::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    border-radius: 20px 20px 0 0;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-number {
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'Syne', sans-serif;
+    margin-bottom: 12px;
+  }
+
+  .q-text {
+    font-size: 17px;
+    line-height: 1.6;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 28px;
+  }
+
+  /* Options */
+  .options { display: grid; gap: 10px; }
+
+  .option {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.2s;
+    font-size: 14px;
+    color: var(--text);
+    text-align: left;
+  }
+
+  .option:hover:not(.disabled) {
+    border-color: rgba(245,158,11,0.4);
+    background: rgba(245,158,11,0.05);
+    transform: translateX(4px);
+  }
+
+  .option-letter {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+
+  .option.correct {
+    border-color: var(--accent2);
+    background: rgba(16,185,129,0.1);
+  }
+  .option.correct .option-letter {
+    background: var(--accent2);
+    color: #fff;
+    border-color: var(--accent2);
+  }
+
+  .option.wrong {
+    border-color: var(--danger);
+    background: rgba(239,68,68,0.08);
+  }
+  .option.wrong .option-letter {
+    background: var(--danger);
+    color: #fff;
+    border-color: var(--danger);
+  }
+
+  .option.disabled { cursor: default; pointer-events: none; }
+
+  /* Explanation */
+  .explanation {
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: #86efac;
+    margin-top: 16px;
+    line-height: 1.6;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .explanation.show { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Navigation buttons */
+  .nav-row {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0e1a;
+  }
+  .btn-primary:hover { background: #fbbf24; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { border-color: var(--muted); color: var(--text); }
+
+  /* Score card */
+  .score-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    text-align: center;
+    animation: slideUp 0.4s ease;
+  }
+
+  .score-big {
+    font-family: 'Syne', sans-serif;
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    margin: 16px 0;
+  }
+
+  .score-label {
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Phase results */
+  .phase-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin: 28px 0;
+  }
+
+  .phase-result-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .phase-result-item .p-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .phase-result-item .p-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 4px 0;
+  }
+
+  .p-score.great { color: var(--accent2); }
+  .p-score.good { color: var(--accent); }
+  .p-score.poor { color: var(--danger); }
+
+  /* Review section */
+  .review-section { margin-top: 32px; }
+
+  .review-section h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    font-size: 13.5px;
+  }
+
+  .review-item .r-q { color: var(--text); margin-bottom: 8px; line-height: 1.5; }
+  .review-item .r-your { color: var(--danger); font-size: 12px; }
+  .review-item .r-correct { color: var(--accent2); font-size: 12px; }
+  .review-item.correct-item { border-left: 3px solid var(--accent2); }
+  .review-item.wrong-item { border-left: 3px solid var(--danger); }
+
+  /* Start screen */
+  .start-screen {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .start-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(245,158,11,0.1);
+    border: 2px solid rgba(245,158,11,0.3);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 36px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 28px 0;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .stat-box .val {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-box .lbl {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  /* Phase complete */
+  .phase-complete {
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .phase-complete .big-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1;
+    margin: 12px 0;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 28px 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 520px) {
+    .q-card { padding: 24px 20px; }
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="badge">🇮🇳 Financial Awareness</div>
+    <h1>Vittiya Jagrukta Quiz</h1>
+    <p class="subtitle">10 Phases · 100 Questions · Test Your Financial Knowledge</p>
+  </div>
+
+  <div id="app"></div>
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  // Phase 1 (0-9)
+  { q: "Savings in a bank account earn:", opts: ["No interest", "Interest, making money grow over time", "Only tax benefits", "Guaranteed stock returns"], ans: 1, exp: "Bank savings accounts earn interest, allowing your money to grow over time through compounding." },
+  { q: "What is the full form of KYC in banking?", opts: ["Know Your Customer", "Keep Your Cash", "Know Your Credit", "Keep Your Currency"], ans: 0, exp: "KYC stands for Know Your Customer — mandatory verification for banking and investments." },
+  { q: "NEFT stands for:", opts: ["National Electronic Fund Transfer", "New Electronic Finance Tool", "National Emergency Fund Transfer", "None of the above"], ans: 0, exp: "NEFT — National Electronic Fund Transfer — is used for electronic money transfers between bank accounts." },
+  { q: "Under Pradhan Mantri Jan Dhan Yojana (PMJDY), what is provided?", opts: ["Rupay debit card", "Accident insurance cover up to ₹1 lakh", "Overdraft facility up to ₹10,000", "All of the above"], ans: 3, exp: "PMJDY provides all these benefits: RuPay debit card, accident insurance, and overdraft facility." },
+  { q: "Pradhan Mantri Suraksha Bima Yojana (PMSBY) provides:", opts: ["Life insurance", "Accident insurance cover of ₹2 lakh on death/disablement", "Health insurance", "Pension"], ans: 1, exp: "PMSBY provides accident insurance of ₹2 lakh for death or permanent disability at a very low premium." },
+  { q: "The annual premium for PMSBY is approximately:", opts: ["₹436", "₹20", "₹330", "₹12"], ans: 1, exp: "PMSBY costs just ₹20 per year — one of the most affordable accident insurance schemes." },
+  { q: "Atal Pension Yojana (APY) is meant for:", opts: ["Government employees only", "Unorganized sector workers to get guaranteed pension after 60", "Children below 18", "High-net-worth individuals"], ans: 1, exp: "APY targets unorganized sector workers, offering guaranteed monthly pension of ₹1,000–₹5,000 after age 60." },
+  { q: "Sukanya Samriddhi Yojana is a scheme for:", opts: ["Girl child education and marriage", "Senior citizens", "Farmers", "Small business loans"], ans: 0, exp: "Sukanya Samriddhi Yojana is specifically designed to secure a girl child's education and marriage future." },
+  { q: "What is inflation?", opts: ["Decrease in prices", "Rise in general price level, reducing purchasing power", "Increase in bank interest rates", "Stock market crash"], ans: 1, exp: "Inflation means prices rise over time, reducing how much you can buy with the same amount of money." },
+  { q: "Compound interest is interest calculated on:", opts: ["Principal only", "Principal plus accumulated interest", "Simple interest only", "Loan amount"], ans: 1, exp: "Compound interest grows on both the original principal AND the interest already earned — the magic of compounding!" },
+
+  // Phase 2 (10-19)
+  { q: "The Rule of 72 is used to estimate:", opts: ["Time to double investment at a given rate", "Tax rate", "Loan EMI", "Insurance premium"], ans: 0, exp: "Divide 72 by the interest rate to find how many years it takes to double your money. E.g., 72÷8 = 9 years." },
+  { q: "SIP in mutual funds stands for:", opts: ["Systematic Investment Plan", "Single Investment Policy", "Special Income Plan", "Stock Investment Program"], ans: 0, exp: "SIP — Systematic Investment Plan — allows regular, disciplined investing in mutual funds with small amounts." },
+  { q: "Rupee Cost Averaging benefits from:", opts: ["Market volatility by buying more units when prices are low", "Fixed lump-sum only", "High-risk gambling", "Fixed deposits"], ans: 0, exp: "SIPs using Rupee Cost Averaging buy more units when prices fall, lowering the average cost over time." },
+  { q: "Which is a safer investment option for beginners?", opts: ["Direct stock trading without knowledge", "Bank fixed deposits or government schemes", "Cryptocurrency", "Unregistered chit funds"], ans: 1, exp: "Bank FDs and government schemes offer guaranteed, predictable returns — ideal for beginners." },
+  { q: "Ponzi schemes promise:", opts: ["Guaranteed high returns with no risk", "Low but steady returns", "Government-backed security", "Tax-free income only"], ans: 0, exp: "Ponzi schemes lure victims with promises of unrealistically high guaranteed returns — always a red flag." },
+  { q: "To report investment fraud, one should contact:", opts: ["SEBI SCORES portal", "Local police only", "Bank manager", "Friends on social media"], ans: 0, exp: "SEBI SCORES (scores.gov.in) is the official portal to lodge investor complaints and report fraud." },
+  { q: "Demat account is required for:", opts: ["Holding shares and securities in electronic form", "Savings account", "Fixed deposit", "Insurance policy"], ans: 0, exp: "A Demat (Dematerialized) account holds your shares and securities electronically, replacing physical certificates." },
+  { q: "Primary market is where:", opts: ["New securities are issued (IPO)", "Existing securities are traded", "Only government bonds are sold", "Gold is traded"], ans: 0, exp: "The primary market is where companies issue new shares to the public for the first time through IPOs." },
+  { q: "Secondary market refers to:", opts: ["Stock exchanges like NSE/BSE for trading listed shares", "New issue market", "Bank loans", "Real estate"], ans: 0, exp: "The secondary market (NSE/BSE) is where previously issued shares are bought and sold between investors." },
+  { q: "Mutual funds are regulated by:", opts: ["RBI", "SEBI", "IRDAI", "NABARD"], ans: 1, exp: "SEBI (Securities and Exchange Board of India) regulates and oversees all mutual funds in India." },
+
+  // Phase 3 (20-29)
+  { q: "Equity mutual funds invest primarily in:", opts: ["Shares/stocks", "Debt instruments", "Gold only", "Real estate"], ans: 0, exp: "Equity mutual funds invest primarily in company shares/stocks, offering higher potential returns with higher risk." },
+  { q: "Debt mutual funds are suitable for:", opts: ["High-risk high-return seekers", "Conservative investors seeking steady income", "Short-term speculation", "Only children"], ans: 1, exp: "Debt funds invest in bonds and fixed income — ideal for conservative investors wanting stable returns." },
+  { q: "NPS (National Pension System) allows:", opts: ["Partial withdrawal for specific needs", "No tax benefits", "Only government employees", "Guaranteed high returns"], ans: 0, exp: "NPS allows partial withdrawals for specific needs like education, medical, and home purchase." },
+  { q: "Under PMJJBY, the sum assured is:", opts: ["₹2 lakh on death", "₹1 lakh on accident", "₹5 lakh health cover", "Pension"], ans: 0, exp: "PMJJBY (Pradhan Mantri Jeevan Jyoti Bima Yojana) provides ₹2 lakh life insurance on death." },
+  { q: "The premium for PMJJBY is approximately:", opts: ["₹436 per year", "₹20", "₹330", "₹12"], ans: 0, exp: "PMJJBY costs ₹436 per year (~₹1.2/day) — very affordable life insurance for all." },
+  { q: "Financial planning starts with:", opts: ["Setting goals, budgeting, and emergency fund", "Borrowing money", "Lottery tickets", "Ignoring expenses"], ans: 0, exp: "Good financial planning begins with clear goals, a realistic budget, and building an emergency fund." },
+  { q: "An emergency fund should cover:", opts: ["3–6 months of living expenses", "One week's groceries", "Only luxury items", "Full home purchase"], ans: 0, exp: "Financial experts recommend an emergency fund covering 3–6 months of essential living expenses." },
+  { q: "Diversification in investing means:", opts: ["Spreading investments across assets to reduce risk", "Putting all money in one stock", "Avoiding investments", "Only fixed deposits"], ans: 0, exp: "Diversification spreads risk across different asset classes — if one falls, others may compensate." },
+  { q: "Risk in investment is:", opts: ["Chance of losing money or not meeting goals", "Always negative", "Only for stocks", "Eliminated by insurance"], ans: 0, exp: "Investment risk is simply the probability that returns may not meet expectations — it's manageable, not evil." },
+  { q: "Higher risk usually comes with:", opts: ["Potential for higher returns", "Guaranteed returns", "No returns", "Lower inflation impact"], ans: 0, exp: "The risk-return tradeoff: higher risk investments like equities offer higher potential returns over the long run." },
+
+  // Phase 4 (30-39)
+  { q: "Blue-chip stocks are:", opts: ["Shares of large, stable, well-established companies", "Small startup shares", "Government bonds", "Penny stocks"], ans: 0, exp: "Blue-chip stocks are shares of large, financially sound, well-established companies with a good track record." },
+  { q: "Bull market means:", opts: ["Rising stock prices", "Falling stock prices", "Stable prices", "No trading"], ans: 0, exp: "A bull market is characterized by rising stock prices, investor confidence, and economic optimism." },
+  { q: "Bear market indicates:", opts: ["Declining stock prices", "Rising prices", "Holiday period", "IPO season"], ans: 0, exp: "A bear market sees declining stock prices — typically a 20%+ fall from recent highs." },
+  { q: "SEBI stands for:", opts: ["Securities and Exchange Board of India", "State Bank of Economic Investment", "Savings and Equity Board of India", "None"], ans: 0, exp: "SEBI — Securities and Exchange Board of India — is the primary regulator of India's capital markets." },
+  { q: "The role of SEBI includes:", opts: ["Protecting investors and regulating securities market", "Issuing currency", "Collecting income tax", "Providing health insurance"], ans: 0, exp: "SEBI's core mandate is investor protection, market development, and regulation of the securities market." },
+  { q: "RBI regulates:", opts: ["Banking system and monetary policy", "Stock market", "Insurance", "Pension funds"], ans: 0, exp: "The Reserve Bank of India controls monetary policy, currency, and the banking system." },
+  { q: "IRDAI regulates:", opts: ["Insurance sector", "Banking", "Mutual funds", "Stock exchanges"], ans: 0, exp: "IRDAI — Insurance Regulatory and Development Authority of India — oversees all insurance companies." },
+  { q: "PAN card is mandatory for:", opts: ["Investments above certain limits and tax purposes", "Daily shopping", "Voting", "Driving license"], ans: 0, exp: "PAN is essential for investments above ₹50,000, income tax filing, and major financial transactions." },
+  { q: "Aadhaar is linked for:", opts: ["KYC in financial accounts and schemes", "Only mobile recharge", "School admission only", "None"], ans: 0, exp: "Aadhaar serves as digital KYC proof for bank accounts, investments, and government welfare schemes." },
+  { q: "Credit score affects:", opts: ["Loan approval and interest rates", "Stock prices", "Gold prices", "Weather"], ans: 0, exp: "Your credit score determines whether you get a loan and at what interest rate — higher score = better terms." },
+
+  // Phase 5 (40-49)
+  { q: "A good credit score is generally above:", opts: ["750 (CIBIL scale)", "300", "100", "0"], ans: 0, exp: "On India's CIBIL scale (300–900), a score above 750 is considered good and helps secure better loan rates." },
+  { q: "Overdraft in PMJDY allows:", opts: ["Withdraw more than balance (up to limit)", "Free insurance only", "Stock trading", "Gold loan"], ans: 0, exp: "PMJDY overdraft facility lets account holders withdraw up to ₹10,000 even with zero balance." },
+  { q: "RTGS is used for:", opts: ["High-value instant transfers", "Small payments only", "International only", "Cash withdrawal"], ans: 0, exp: "RTGS (Real Time Gross Settlement) handles high-value transactions (above ₹2 lakh) instantly." },
+  { q: "UPI stands for:", opts: ["Unified Payments Interface", "Universal Payment Insurance", "United Pension Investment", "None"], ans: 0, exp: "UPI — Unified Payments Interface — enables instant mobile-to-mobile money transfers 24/7." },
+  { q: "Digital payments reduce:", opts: ["Need for cash and risk of theft", "Interest rates", "Taxes", "Inflation"], ans: 0, exp: "Digital payments reduce cash dependency, theft risk, and enable better financial record keeping." },
+  { q: "Unsolicited messages promising high returns are likely:", opts: ["Fraud", "Government scheme", "Bank offer", "SEBI approved"], ans: 0, exp: "Unsolicited 'guaranteed high return' messages are classic fraud tactics — never trust or respond to them." },
+  { q: "Before investing, always check if advisor is:", opts: ["SEBI-registered", "Famous on social media", "Family member", "Offering gifts"], ans: 0, exp: "Always verify your investment advisor is SEBI-registered at sebi.gov.in before trusting their advice." },
+  { q: "Time value of money means:", opts: ["Money today is worth more than same amount tomorrow", "Future money is better", "No difference", "Only cash"], ans: 0, exp: "A rupee today is worth more than a rupee tomorrow because it can be invested and earn returns." },
+  { q: "Budgeting helps in:", opts: ["Controlling expenses and saving more", "Spending freely", "Increasing debt", "Avoiding banks"], ans: 0, exp: "A budget is a financial roadmap — it tracks income vs expenses and ensures you save and invest regularly." },
+  { q: "Retirement planning should start:", opts: ["As early as possible", "After 50 years", "Only after marriage", "Never"], ans: 0, exp: "Starting retirement savings early maximizes compounding — starting at 25 vs 35 can double your corpus." },
+
+  // Phase 6 (50-59)
+  { q: "Tax saving investments include:", opts: ["ELSS mutual funds under Section 80C", "Only salary", "Gambling wins", "Lottery"], ans: 0, exp: "ELSS (Equity Linked Savings Scheme) funds offer tax deduction up to ₹1.5 lakh under Section 80C." },
+  { q: "Gratuity is paid by employer:", opts: ["On retirement/resignation after 5 years service", "Monthly", "As bonus", "Only government jobs"], ans: 0, exp: "Gratuity is a one-time payment by employers to employees who complete at least 5 years of service." },
+  { q: "EPF stands for:", opts: ["Employees' Provident Fund", "Equity Pension Fund", "Emergency Provident Fund", "None"], ans: 0, exp: "EPF is a mandatory retirement savings scheme where both employee and employer contribute monthly." },
+  { q: "Health insurance is important because:", opts: ["Medical costs are rising", "It covers life only", "No need if healthy", "Government provides free"], ans: 0, exp: "Rising medical costs can wipe out savings — health insurance protects you from catastrophic medical bills." },
+  { q: "Ayushman Bharat provides:", opts: ["Health insurance up to ₹5 lakh per family for poor", "Pension", "Education loan", "Housing"], ans: 0, exp: "Ayushman Bharat (PM-JAY) is the world's largest health insurance scheme providing ₹5 lakh cover to poor families." },
+  { q: "Goal-based investing means:", opts: ["Investing separately for education, marriage, retirement", "Random investments", "Only short-term", "No planning"], ans: 0, exp: "Goal-based investing aligns each investment with a specific life goal — making planning more effective." },
+  { q: "Liquidity in investment means:", opts: ["How quickly you can convert to cash", "High risk", "Long lock-in", "No returns"], ans: 0, exp: "Liquidity = ease of converting an investment to cash. Savings accounts are highly liquid; real estate is not." },
+  { q: "Fixed deposits offer:", opts: ["Guaranteed returns and safety", "Highest returns", "Equity exposure", "No interest"], ans: 0, exp: "FDs offer guaranteed, predictable returns and are among the safest investment instruments." },
+  { q: "Gold as investment protects against:", opts: ["Inflation", "Market crash only", "Taxes", "Loans"], ans: 0, exp: "Gold is a traditional inflation hedge — its value tends to rise when the rupee's purchasing power falls." },
+  { q: "Real estate investment requires:", opts: ["High capital and long-term view", "Daily trading", "Low risk always", "No maintenance"], ans: 0, exp: "Real estate needs large capital, is illiquid, and requires a long-term horizon to generate good returns." },
+
+  // Phase 7 (60-69)
+  { q: "Stock market index like Nifty 50 represents:", opts: ["Performance of top 50 companies", "All companies", "Only banks", "Government bonds"], ans: 0, exp: "Nifty 50 tracks the 50 largest companies on NSE — it's a benchmark for overall market performance." },
+  { q: "IPO means:", opts: ["Initial Public Offering", "International Pension Option", "Investment Protection Office", "None"], ans: 0, exp: "IPO — Initial Public Offering — is when a private company offers shares to the public for the first time." },
+  { q: "Bonus shares are:", opts: ["Free shares given by company", "Paid shares", "Loan shares", "Taxed heavily"], ans: 0, exp: "Companies issue bonus shares free to existing shareholders as a reward, by capitalizing reserves." },
+  { q: "Dividend is:", opts: ["Share of profit distributed to shareholders", "Interest", "Tax", "Penalty"], ans: 0, exp: "Dividends are a portion of company profits distributed to shareholders as a reward for their investment." },
+  { q: "Bullion refers to:", opts: ["Gold and silver", "Stocks", "Bonds", "Mutual funds"], ans: 0, exp: "Bullion refers to precious metals (gold/silver) in bulk form — bars, ingots, or coins." },
+  { q: "Futures and options are:", opts: ["Derivative products for hedging/speculation", "Safe for beginners", "Guaranteed profit", "Bank deposits"], ans: 0, exp: "F&O are complex derivative instruments suitable only for experienced investors — high risk for beginners." },
+  { q: "Margin trading involves:", opts: ["Borrowing to invest", "No risk", "Only selling", "Fixed returns"], ans: 0, exp: "Margin trading involves borrowing money from a broker to invest — amplifies both gains AND losses." },
+  { q: "Stop-loss order is used to:", opts: ["Limit losses in trading", "Increase profits", "Buy more", "Sell all"], ans: 0, exp: "A stop-loss automatically sells a stock when it falls to a set price, protecting against excessive losses." },
+  { q: "Investor grievance can be filed on:", opts: ["SEBI SCORES portal", "RBI website only", "Newspaper", "Social media"], ans: 0, exp: "SEBI SCORES (scores.sebi.gov.in) is the official portal for investors to file complaints against brokers/companies." },
+  { q: "Financial fraud like phishing involves:", opts: ["Fake emails/calls asking for details", "Genuine bank offers", "Government letters", "Family advice"], ans: 0, exp: "Phishing uses fake emails/calls/SMS pretending to be banks or companies to steal your personal/financial data." },
+
+  // Phase 8 (70-79)
+  { q: "Two-factor authentication (2FA) enhances:", opts: ["Account security", "Returns", "Taxes", "Loans"], ans: 0, exp: "2FA adds an extra security layer (OTP/biometric) to logins — significantly reducing unauthorized access." },
+  { q: "Net worth is:", opts: ["Assets minus liabilities", "Only salary", "Bank balance", "Expenses"], ans: 0, exp: "Net worth = everything you own (assets) minus everything you owe (liabilities) — a key financial health metric." },
+  { q: "Passive investing includes:", opts: ["Index funds tracking market", "Day trading", "Frequent buying/selling", "High fees"], ans: 0, exp: "Index funds passively track a market index like Nifty 50 — low cost, less effort, proven long-term results." },
+  { q: "Active investing means:", opts: ["Fund manager picks stocks to beat market", "Following index", "No management", "Guaranteed"], ans: 0, exp: "Active investing involves fund managers researching and picking stocks to outperform the benchmark index." },
+  { q: "The ultimate goal of financial literacy is:", opts: ["Achieving financial independence and security", "Becoming rich overnight", "Spending all income", "Avoiding all risks"], ans: 0, exp: "Financial literacy empowers people to make smart decisions leading to long-term financial independence and security." },
+  { q: "What does the Rule of 72 help calculate?", opts: ["Exact interest earned", "Approximate time to double money at a given rate", "Loan repayment period", "Tax slab changes"], ans: 1, exp: "Rule of 72: divide 72 by annual interest rate to estimate years needed to double your investment." },
+  { q: "Rupee Cost Averaging is most beneficial in:", opts: ["Lump-sum investing in volatile markets", "SIPs in mutual funds to reduce average cost", "Fixed deposit investments only", "Borrowing money"], ans: 1, exp: "Regular SIP investments use Rupee Cost Averaging — you buy more units when prices are low, less when high." },
+  { q: "Primary purpose of maintaining a budget:", opts: ["To spend all income every month", "To track income, expenses, and ensure savings", "To avoid paying taxes", "To increase debt"], ans: 1, exp: "A budget helps you understand where your money goes and ensures you live within means while saving." },
+  { q: "Compounding works best when:", opts: ["Withdrawals are made frequently", "Returns are reinvested over a long period", "Interest is simple only", "Investments are in cash"], ans: 1, exp: "The magic of compounding exponentially grows wealth when returns are reinvested consistently over decades." },
+  { q: "Which insurance provides accident cover of ₹2 lakh for ~₹20/year?", opts: ["PMJJBY", "PMSBY (Pradhan Mantri Suraksha Bima Yojana)", "Ayushman Bharat", "Private health insurance"], ans: 1, exp: "PMSBY provides ₹2 lakh accident insurance for just ₹20/year — one of India's most affordable schemes." },
+
+  // Phase 9 (80-89)
+  { q: "Time Value of Money concept emphasizes:", opts: ["Money today is worth more than same amount in future", "Future money is always better", "Money has no value over time", "Only cash matters"], ans: 0, exp: "TVM: ₹1,000 today invested at 8% becomes ₹1,080 next year — always better to receive money sooner." },
+  { q: "KYC (Know Your Customer) is mandatory primarily for:", opts: ["Opening bank accounts, demat accounts, and investing", "Buying groceries", "Traveling abroad only", "Paying electricity bills"], ans: 0, exp: "KYC is legally required for all financial account openings and investment activities in India." },
+  { q: "Which is a long-term financial goal?", opts: ["Buying daily vegetables", "Children's education and retirement planning", "Weekend outing", "Mobile recharge"], ans: 1, exp: "Education and retirement are long-term goals requiring years of systematic planning and investing." },
+  { q: "If you receive an unsolicited call offering 'double your money in 6 months', you should:", opts: ["Invest immediately", "Verify credentials and report to SEBI/police if suspicious", "Share personal details", "Borrow money to invest"], ans: 1, exp: "Such calls are almost always scams. Verify, never share OTP/bank details, report to SEBI SCORES." },
+  { q: "The power of compounding is called 'eighth wonder' because:", opts: ["It guarantees high returns without risk", "Returns earn returns over time, leading to exponential growth", "It works only in banks", "It eliminates taxes"], ans: 1, exp: "Attributed to Einstein — compounding creates exponential wealth growth as returns themselves earn returns." },
+  { q: "Main objective of Bharatiya Vittiya Jagrukta Yojana:", opts: ["Increase bank deposits only", "Educate people about saving, investing, insurance, avoiding frauds", "Provide free loans", "Promote stock trading"], ans: 1, exp: "Bharatiya Vittiya Jagrukta Yojana aims at holistic financial awareness across all aspects of personal finance." },
+  { q: "Organization primarily driving financial awareness in India's securities market:", opts: ["RBI", "SEBI", "IRDAI", "NABARD"], ans: 1, exp: "SEBI leads all investor education initiatives in India's securities market through dedicated programs and apps." },
+  { q: "Which scheme provides life insurance of ₹2 lakh at low premium?", opts: ["PMJJBY", "Atal Pension Yojana", "Sukanya Samriddhi Yojana", "PM SVANidhi"], ans: 0, exp: "PMJJBY offers ₹2 lakh life cover at ₹436/year (~₹36/month) — ideal for low-income families." },
+  { q: "Vittiya Jagrukta programs warn against:", opts: ["Saving in banks", "Ponzi schemes and chit funds", "Mutual funds", "Government bonds"], ans: 1, exp: "A primary focus is protecting citizens from fraudulent Ponzi/pyramid schemes and unauthorized chit funds." },
+  { q: "Key component of financial planning in awareness yojanas:", opts: ["Retirement planning and pension schemes", "Only daily expenses", "Gambling", "Lottery schemes"], ans: 0, exp: "Long-term retirement planning and pension enrollment are central pillars of financial awareness programs." },
+
+  // Phase 10 (90-99)
+  { q: "The Saarthi App by SEBI is used for:", opts: ["Stock trading", "Investor education and financial literacy resources", "Bank account opening", "Insurance claims"], ans: 1, exp: "SEBI's Saarthi app provides videos, quizzes, and comprehensive financial literacy material for investors." },
+  { q: "PMJDY primarily promotes:", opts: ["Everyone having a bank account and financial literacy", "Only insurance", "Stock market investment", "Gold purchase"], ans: 0, exp: "Jan Dhan Yojana's core mission is universal banking access + financial inclusion for all Indians." },
+  { q: "Which pension scheme is highlighted for unorganized sector workers?", opts: ["Atal Pension Yojana", "PM Kisan", "MGNREGA", "Ayushman Bharat"], ans: 0, exp: "APY provides guaranteed pension of ₹1,000–₹5,000/month after 60 for unorganized sector workers." },
+  { q: "Financial awareness campaigns warn against:", opts: ["Unauthorized advisors promising guaranteed high returns", "SEBI-registered mutual funds", "Bank fixed deposits", "Post office savings schemes"], ans: 0, exp: "Unauthorized advisors promising unrealistic guaranteed returns are a major warning sign of investment fraud." },
+  { q: "Goal of NISM's Financial Education Certification:", opts: ["Certify mutual fund distributors only", "Enhance understanding of banking, securities, insurance, pension, and investor protection", "Teach coding", "Promote real estate"], ans: 1, exp: "NISM (National Institute of Securities Markets) provides broad financial education across all sectors." },
+  { q: "Which example represents passive income?", opts: ["Salary from a job", "Dividend from shares or rental income", "Freelance work payment", "Overtime wages"], ans: 1, exp: "Passive income (dividends, rent) flows without active daily effort — a key goal in financial independence." },
+  { q: "Inflation affects purchasing power by:", opts: ["Increasing value of money over time", "Decreasing value of money (goods become costlier)", "Having no impact on savings", "Only affecting imported goods"], ans: 1, exp: "Inflation erodes purchasing power — ₹100 today buys more than ₹100 will buy 5 years from now." },
+  { q: "Net worth is calculated as:", opts: ["Only salary × years worked", "Total assets minus total liabilities", "Monthly expenses × 12", "Stock portfolio value only"], ans: 1, exp: "Net worth = Assets (savings, property, investments) minus Liabilities (loans, credit card debt, EMIs)." },
+  { q: "Which of these is NOT recommended to avoid financial frauds?", opts: ["Verify SEBI registration of advisor", "Believe schemes promising 20-30% monthly guaranteed returns", "Report suspicious offers to authorities", "Check for unsolicited calls"], ans: 1, exp: "Believing in 'guaranteed' monthly returns of 20-30% is a major mistake — these are always fraud signals." },
+  { q: "Financial independence ultimately means:", opts: ["Never working again", "Having enough wealth/income to cover expenses without being forced to work", "Being the richest person", "Owning multiple properties"], ans: 1, exp: "Financial independence = having sufficient assets/passive income that work becomes a choice, not a necessity." }
+];
+
+const PHASES = 10;
+const QS_PER_PHASE = 10;
+const LETTERS = ['A', 'B', 'C', 'D'];
+
+let state = {
+  screen: 'start',
+  phase: 0,
+  qIndex: 0,
+  selected: null,
+  phaseScores: [],
+  allAnswers: [],
+  showingResults: false
+};
+
+function getPhaseQuestions(phase) {
+  return ALL_QUESTIONS.slice(phase * QS_PER_PHASE, (phase + 1) * QS_PER_PHASE);
+}
+
+function render() {
+  const app = document.getElementById('app');
+  if (state.screen === 'start') renderStart(app);
+  else if (state.screen === 'quiz') renderQuiz(app);
+  else if (state.screen === 'phase-end') renderPhaseEnd(app);
+  else if (state.screen === 'final') renderFinal(app);
+}
+
+function renderStart(app) {
+  app.innerHTML = `
+    <div class="q-card">
+      <div class="start-screen">
+        <div class="start-icon">🏦</div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:10px;">Test Your Financial Knowledge</h2>
+        <p style="color:var(--muted);font-size:15px;line-height:1.6;max-width:460px;margin:0 auto 24px;">Based on SEBI, NISM & government financial literacy programs including Bharatiya Vittiya Jagrukta Yojana.</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="val">100</div><div class="lbl">Questions</div></div>
+          <div class="stat-box"><div class="val">10</div><div class="lbl">Phases</div></div>
+          <div class="stat-box"><div class="val">∞</div><div class="lbl">Knowledge</div></div>
+        </div>
+        <button class="btn btn-primary" onclick="startQuiz()" style="font-size:16px;padding:16px 40px;">Begin Quiz →</button>
+      </div>
+    </div>`;
+}
+
+function renderQuiz(app) {
+  const pq = getPhaseQuestions(state.phase);
+  const q = pq[state.qIndex];
+  const globalQ = state.phase * QS_PER_PHASE + state.qIndex;
+  const totalProgress = ((globalQ) / 100) * 100;
+  const answered = state.selected !== null;
+
+  const phaseDots = Array.from({length: PHASES}, (_, i) => {
+    let cls = i < state.phase ? 'done' : i === state.phase ? 'active' : '';
+    return `<div class="phase-dot ${cls}"></div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="phase-bar">${phaseDots}</div>
+    <div class="phase-title">Phase ${state.phase + 1} of 10 · Question ${state.qIndex + 1} of 10</div>
+    <div class="progress-wrap"><div class="progress-fill" style="width:${totalProgress}%"></div></div>
+
+    <div class="q-card" id="qcard">
+      <div class="q-number">Q${globalQ + 1} · Phase ${state.phase + 1}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((opt, i) => {
+          let cls = '';
+          if (answered) {
+            if (i === q.ans) cls = 'correct';
+            else if (i === state.selected && i !== q.ans) cls = 'wrong';
+            cls += ' disabled';
+          }
+          return `<div class="option ${cls}" onclick="selectOption(${i})">
+            <div class="option-letter">${LETTERS[i]}</div>
+            <span>${opt}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="explanation ${answered ? 'show' : ''}" id="exp">
+        ✅ <strong>Correct Answer: ${LETTERS[q.ans]}) ${q.opts[q.ans]}</strong><br>${q.exp}
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" ${!answered ? 'disabled' : ''}>
+        ${state.qIndex < QS_PER_PHASE - 1 ? 'Next →' : state.phase < PHASES - 1 ? 'End Phase →' : 'See Results →'}
+      </button>
+    </div>`;
+}
+
+function renderPhaseEnd(app) {
+  const score = state.phaseScores[state.phase];
+  const pct = Math.round((score / QS_PER_PHASE) * 100);
+  const msg = pct >= 80 ? '🏆 Excellent!' : pct >= 60 ? '👍 Good Job!' : '📚 Keep Learning!';
+  const cls = pct >= 80 ? 'great' : pct >= 60 ? 'good' : 'poor';
+
+  const phasePQs = getPhaseQuestions(state.phase);
+  const phaseAnswers = state.allAnswers.slice(state.phase * QS_PER_PHASE, (state.phase + 1) * QS_PER_PHASE);
+
+  const wrongOnes = phaseAnswers.map((a, i) => ({...phasePQs[i], userAns: a, idx: i})).filter(x => x.userAns !== x.ans);
+
+  app.innerHTML = `
+    <div class="q-card">
+      <div class="phase-complete">
+        <div class="phase-title">Phase ${state.phase + 1} Complete</div>
+        <div class="big-num ${cls}">${score}/${QS_PER_PHASE}</div>
+        <div style="font-size:24px;margin:8px 0;">${msg}</div>
+        <div style="color:var(--muted);font-size:14px;">You scored ${pct}% in this phase</div>
+      </div>
+
+      ${wrongOnes.length > 0 ? `
+      <div class="divider"></div>
+      <div class="review-section">
+        <h3>❌ Review Incorrect Answers (${wrongOnes.length})</h3>
+        ${wrongOnes.map(item => `
+          <div class="review-item wrong-item">
+            <div class="r-q">${item.q}</div>
+            <div class="r-your">Your answer: ${LETTERS[item.userAns]}) ${item.opts[item.userAns]}</div>
+            <div class="r-correct">Correct: ${LETTERS[item.ans]}) ${item.opts[item.ans]}</div>
+          </div>`).join('')}
+      </div>` : `<div style="text-align:center;color:var(--accent2);padding:20px;font-size:15px;">🎯 Perfect score! All answers correct!</div>`}
+
+      <div class="nav-row" style="justify-content:center;margin-top:28px;">
+        ${state.phase < PHASES - 1 
+          ? `<button class="btn btn-primary" onclick="nextPhase()">Start Phase ${state.phase + 2} →</button>`
+          : `<button class="btn btn-primary" onclick="showFinal()">View Final Results →</button>`}
+      </div>
+    </div>`;
+}
+
+function renderFinal(app) {
+  const total = state.phaseScores.reduce((a, b) => a + b, 0);
+  const pct = Math.round((total / 100) * 100);
+  const grade = pct >= 90 ? { g: 'A+', label: 'Financial Expert', color: '#10b981' }
+    : pct >= 75 ? { g: 'A', label: 'Financially Aware', color: '#f59e0b' }
+    : pct >= 60 ? { g: 'B', label: 'Good Foundation', color: '#60a5fa' }
+    : pct >= 40 ? { g: 'C', label: 'Needs Improvement', color: '#f97316' }
+    : { g: 'D', label: 'Keep Learning!', color: '#ef4444' };
+
+  const wrongAll = state.allAnswers.map((a, i) => ({...ALL_QUESTIONS[i], userAns: a, idx: i})).filter(x => x.userAns !== x.ans);
+
+  app.innerHTML = `
+    <div class="score-card">
+      <div class="badge">Quiz Complete</div>
+      <div style="font-size:48px;margin:8px 0;">${pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '📚'}</div>
+      <div class="score-big" style="color:${grade.color}">${total}</div>
+      <div class="score-label">out of 100 questions</div>
+      <div style="margin:12px 0;font-family:'Syne',sans-serif;font-size:1.1rem;color:${grade.color};">${grade.g} · ${grade.label}</div>
+
+      <div class="divider"></div>
+
+      <div style="font-family:'Syne',sans-serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;">Phase-by-Phase Scores</div>
+      <div class="phase-results">
+        ${state.phaseScores.map((s, i) => {
+          const p = Math.round((s / 10) * 100);
+          const c = p >= 80 ? 'great' : p >= 60 ? 'good' : 'poor';
+          return `<div class="phase-result-item">
+            <div class="p-num">Phase ${i+1}</div>
+            <div class="p-score ${c}">${s}/10</div>
+            <div style="font-size:10px;color:var(--muted)">${p}%</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      ${wrongAll.length > 0 ? `
+      <div class="divider"></div>
+      <div class="review-section" style="text-align:left">
+        <h3>📋 All Incorrect Answers (${wrongAll.length})</h3>
+        ${wrongAll.map(item => `
+          <div class="review-item wrong-item">
+            <div class="r-q" style="font-size:12px;color:var(--muted);margin-bottom:4px;">Q${item.idx+1}</div>
+            <div class="r-q">${item.q}</div>
+            <div class="r-your">Your answer: ${LETTERS[item.userAns]}) ${item.opts[item.userAns]}</div>
+            <div class="r-correct">Correct: ${LETTERS[item.ans]}) ${item.opts[item.ans]}</div>
+          </div>`).join('')}
+      </div>` : `<div style="text-align:center;color:var(--accent2);padding:16px;font-size:16px;">🎯 Perfect 100! Outstanding!</div>`}
+
+      <div class="nav-row" style="justify-content:center;margin-top:28px;">
+        <button class="btn btn-primary" onclick="restartQuiz()">🔄 Restart Quiz</button>
+      </div>
+    </div>`;
+}
+
+// Actions
+function startQuiz() {
+  state = { screen: 'quiz', phase: 0, qIndex: 0, selected: null, phaseScores: [], allAnswers: [], showingResults: false };
+  render();
+}
+
+function selectOption(i) {
+  if (state.selected !== null) return;
+  state.selected = i;
+  render();
+}
+
+function nextQuestion() {
+  const q = getPhaseQuestions(state.phase)[state.qIndex];
+  state.allAnswers.push(state.selected);
+
+  if (state.qIndex === QS_PER_PHASE - 1) {
+    // End of phase
+    const phaseStart = state.phase * QS_PER_PHASE;
+    const thisPhaseAnswers = state.allAnswers.slice(phaseStart);
+    const phaseQs = getPhaseQuestions(state.phase);
+    const score = thisPhaseAnswers.reduce((acc, a, i) => acc + (a === phaseQs[i].ans ? 1 : 0), 0);
+    state.phaseScores.push(score);
+    state.screen = 'phase-end';
+  } else {
+    state.qIndex++;
+    state.selected = null;
+  }
+  render();
+}
+
+function nextPhase() {
+  state.phase++;
+  state.qIndex = 0;
+  state.selected = null;
+  state.screen = 'quiz';
+  render();
+}
+
+function showFinal() {
+  state.screen = 'final';
+  render();
+}
+
+function restartQuiz() {
+  startQuiz();
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
